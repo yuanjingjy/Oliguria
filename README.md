@@ -12,7 +12,7 @@
     yj_diureticdurations:利尿剂使用情况视图 <br>
   
 ## 1.2 少尿组数据提取
-  ### 主要视图说明
+### 主要视图说明
      yj_uolesscohort:保存所有发生少尿的样本 <br>
      yj_uo24:发生少尿前24小时的总尿量 <br>
      yj_vital24:发生少尿钱24小时的关键生理参数 <br>
