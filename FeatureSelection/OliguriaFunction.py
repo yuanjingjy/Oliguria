@@ -15,6 +15,7 @@ import logRegres as LR
 from sklearn.neural_network import MLPClassifier  # import the classifier
 from sklearn import svm
 import adaboost
+import scipy
 
 
 """
@@ -92,3 +93,58 @@ def AdaFeature(train_in,train_out,test_in):
     classifierArray, aggClassEst = adaboost.adaBoostTrainDS(train_in, train_out, 200);
     test_predict, prob_test = adaboost.adaClassify(test_in, classifierArray);  # 测试测试集
     return test_predict
+
+
+"""
+Description：
+    根据Jarque-Bera值，判断数据是否服从正态分布，当序列服从正态分布时，
+    JB统计量也渐进服从正态分布。
+Inputs:
+    datain:待检验的数据
+Outputs:
+    JB:Jarque-Bera值
+    Pvalue：JB值的假设检验结果
+"""
+def normtest(datain):
+    n=np.shape(datain)[0]
+    y=datain-datain.mean()
+    M2=np.mean(y**2)
+    skew=np.mean(y**3)/(M2**1.5)
+    kur=np.mean(y**4)/(M2**2)
+    JB=n*((skew**2)/6+((kur-3)**2)/24)
+    pvalue=1-scipy.stats.chi2.cdf(JB,df=2)
+    return JB,pvalue,skew
+
+"""
+Description:
+    利用改进zscore方法及Turkey方法识别异常值，两种方法都识别为异常值的认为是异常值
+    改进zscore法：根据中位数及距离中位数的偏差来识别异常值
+    Turkeys方法：定义IQR=上四分位数-下四分位数
+                        上四分位数+3*IQR与下四分位数-3*IQR 范围外的定义为异常值
+Input:
+    datain:待判断数据
+Output:
+    dataout:将异常值位置置空后输出的矩阵
+"""
+def zscore_re(datain):
+    #利用改进zscore方法识别异常数据
+    diff=datain-np.median(datain,axis=0)
+    MAD=np.median(abs(diff),axis=0)
+    zscore=(0.6745*diff)/MAD
+    zscore=abs(zscore)
+    dataout=datain.copy()
+    mask_zscore=zscore>3.5
+
+    #利用Turkey方法识别异常值
+    Q1,mid,Q3=np.percentile(datain,(25,50,75),axis=0)
+    IQR=Q3-Q1
+    out_up=Q3+1.5*IQR
+    out_down=Q1-1.5*IQR
+    mask_precup=np.maximum(datain,out_up)==datain#超过上限的异常值
+    mask_precdown = np.maximum(datain, out_down) == out_down#超过下限的异常值
+    mask_prec= np.logical_or(mask_precdown, mask_precup)#逻辑或
+
+    maskinfo=np.logical_and(mask_prec,mask_zscore)#两种方法都识别为异常值的认为是异常值
+
+    dataout[maskinfo]=np.nan#异常值位置置空
+    return dataout

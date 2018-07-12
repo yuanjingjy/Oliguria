@@ -5,6 +5,7 @@ Logistic Regression Working Module
 '''
 
 from numpy import *
+import matplotlib.pyplot as plt
 '''
 Description:
     加载数据
@@ -47,7 +48,7 @@ def gradAscent(dataMatIn, classLabels):
     m,n = shape(dataMatrix)
     alpha = 0.001
     maxCycles = 500#最大迭代次数
-    weights = ones((n,1))#出事权重
+    weights = ones((n,1))#初始权重
     for k in range(maxCycles):              #heavy on matrix operations
         h = sigmoid(dataMatrix*weights)     #matrix mult，特征值乘以权重经过S函数变换后的结果
         error = (labelMat - h)              #vector subtraction，错误率
@@ -117,6 +118,7 @@ Output:
 def stocGradAscent1(dataMatrix, classLabels, numIter=150):
     m,n = shape(dataMatrix)
     weights = ones(n)   #initialize to all ones
+    ploterror=[]
     for j in range(numIter):
         dataIndex = list(range(m))
         for i in range(m):
@@ -124,6 +126,7 @@ def stocGradAscent1(dataMatrix, classLabels, numIter=150):
             randIndex = int(random.uniform(0,len(dataIndex)))#go to 0 because of the constant
             h = sigmoid(sum(dataMatrix[randIndex]*weights))
             error = classLabels[randIndex] - h
+            # ploterror.append(error)
             weights = weights + alpha * error * dataMatrix[randIndex]
             del(dataIndex[randIndex])
     return weights

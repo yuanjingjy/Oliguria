@@ -37,15 +37,25 @@ import  OliguriaFunction as OF
 
 
 
+
 import  pandas as  pd#python data analysis
 import  matplotlib.pyplot as plt
 
-data=pd.read_csv('Featuresorted.csv')
+data=pd.read_csv('outlier.csv')
 labelMat=data['classlabel']
-dataMat=data.ix[:,0:45]
-dataMat=dataMat.drop(['vaso','saps','sapsii','sapsii_prob','lods',
-                      'oasis','oasis_prob','mingcs','apsiii_prob','apsiii',
-                      'gender','vent','sofa'] ,axis=1)
+dataMat=data.ix[:,0:60]
+# dataMat=dataMat.drop(['vaso','saps','sapsii','sapsii_prob','lods',
+#                       'oasis','oasis_prob','mingcs','apsiii_prob','apsiii',
+#                       'gender','vent','sofa'] ,axis=1)
+
+#去除假设检验不通过的
+delnames=['pco2_avg','ph_avg','wbc_min','wbc_avg','wbc_max',
+                'rbc_max','rbc_avg','rbc_min','ph_avg','platelet_avg','platelet_max',
+                 'creatinine_min', 'creatinine_avg','bun_min','bun_max',
+                'bun_avg','pt_min', 'pt_avg','inr_min','heartrate_min','diasbp_max',
+                'meanbp_mean','resprate_mean','resprate_min','spo2_mean',
+                'spo2_max','spo2_min','BMI']
+dataused=dataMat.drop(delnames,axis=1)
 
 evaluate_train = []
 evaluate_test = []
@@ -80,7 +90,8 @@ for train,test in skf.split(dataMat,labelMat):
     train_in, train_out = RandomOverSampler().fit_sample(train_in, train_out)
     # train_in, train_out = RandomUnderSampler().fit_sample(train_in, train_out)
     trainWeights=LR.stocGradAscent1(train_in,train_out,500)
-    
+    # fig=plt.figure()
+
     len_train=np.shape(train_in)[0]
     len_test=np.shape(test_in)[0]
     test_predict=[]
