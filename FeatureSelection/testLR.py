@@ -42,6 +42,9 @@ import  pandas as  pd#python data analysis
 import  matplotlib.pyplot as plt
 
 data=pd.read_csv('outlier.csv')
+featurenames=data.keys()
+data=np.random.permutation(data)
+data=pd.DataFrame(data,columns=featurenames)
 labelMat=data['classlabel']
 dataMat=data.ix[:,0:60]
 # dataMat=dataMat.drop(['vaso','saps','sapsii','sapsii_prob','lods',
