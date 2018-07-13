@@ -46,7 +46,8 @@ featurenames=data.keys()
 data=np.random.permutation(data)
 data=pd.DataFrame(data,columns=featurenames)
 labelMat=data['classlabel']
-dataMat=data.ix[:,0:60]
+labelMat=np.array(labelMat)
+dataMat=data.iloc[:,0:60]
 # dataMat=dataMat.drop(['vaso','saps','sapsii','sapsii_prob','lods',
 #                       'oasis','oasis_prob','mingcs','apsiii_prob','apsiii',
 #                       'gender','vent','sofa'] ,axis=1)
@@ -58,7 +59,7 @@ delnames=['pco2_avg','ph_avg','wbc_min','wbc_avg','wbc_max',
                 'bun_avg','pt_min', 'pt_avg','inr_min','heartrate_min','diasbp_max',
                 'meanbp_mean','resprate_mean','resprate_min','spo2_mean',
                 'spo2_max','spo2_min','BMI']
-dataused=dataMat.drop(delnames,axis=1)
+dataMat=dataMat.drop(delnames,axis=1)
 
 evaluate_train = []
 evaluate_test = []
