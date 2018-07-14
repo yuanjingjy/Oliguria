@@ -65,10 +65,10 @@ for train, test in skf.split(dataMat, labelMat):
     train_in, train_out = RandomOverSampler().fit_sample(train_in, train_out)
     # train_in, train_out = RandomUnderSampler().fit_sample(train_in, train_out)
 
-    clf=LogisticRegression(penalty='l1', dual=False, tol=0.0001, C=0.3,
-                           fit_intercept=True, intercept_scaling=1, class_weight='balanced',
+    clf=LogisticRegression(penalty='l1', dual=False, tol=0.0001, C=63,
+                           fit_intercept=True, intercept_scaling=24, class_weight=None,
                            random_state=None, solver='liblinear', max_iter=1000,
-                           multi_class='ovr', verbose=0, warm_start=False, n_jobs=1)
+                           multi_class='ovr', verbose=14, warm_start=False, n_jobs=1)
     clf.fit(train_in,train_out)
     test_predict=clf.predict(test_in)
     proba_test=clf.predict_proba(test_in)

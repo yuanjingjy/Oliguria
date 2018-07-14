@@ -11,6 +11,8 @@ import numpy as np
 from sklearn.model_selection import StratifiedKFold
 import OliguriaFunction as OF
 from sklearn.linear_model import LogisticRegression
+from imblearn.over_sampling import RandomOverSampler
+
 
 ###################################################
 
@@ -54,18 +56,19 @@ def percept(args):
     accuracy=[]
     skf = StratifiedKFold(n_splits=10)
     for train, test in skf.split(dataMat, labelMat):
-        print("%s %s" % (train, test))
+        # print("%s %s" % (train, test))
         train_in = dataMat[train]
         test_in = dataMat[test]
         train_out = labelMat[train]
         test_out = labelMat[test]
+        train_in, train_out = RandomOverSampler().fit_sample(train_in, train_out)
 
-        clf = LogisticRegression(penalty=args["penalty"], C=args["C"],
+        clf = LogisticRegression(penalty='l2', C=args["C"],
                                 intercept_scaling=args["intercept_scaling"],
-                                 class_weight='balanced',
-                                 solver='liblinear', max_iter=1000,
+                                 class_weight='blanced',
+                                 solver=args['solver'], max_iter=1000,
                                   verbose=args["verbose"],
-                                 warm_start=args["warm_start"])
+                                 warm_start=True)
         clf.fit(train_in,train_out)
         y_pred=clf.predict(test_in)
         acc=accuracy_score(test_out,y_pred)
@@ -73,17 +76,19 @@ def percept(args):
     return -np.mean(accuracy)
 
 
-from hyperopt import fmin,tpe,hp,partial
-space={"penalty":hp.choice("penalty",['l1','l2']),
-       "C":hp.uniform("C",0.01,50),
-       "intercept_scaling":hp.uniform("intercept_scaling",1,50),
-
-       "warm_start":hp.choice("warm_start",['True','False']),
-       "verbose":hp.randint("verbose",20),
+from hyperopt import fmin, tpe, hp, STATUS_OK, Trials,partial,space_eval
+space={
+       'C':hp.uniform('C',0.01,80),
+        'intercept_scaling':hp.uniform("intercept_scaling",1,200),
+        'class_weight':hp.choice('class_weight',[None,'balanced']),
+        'solver':hp.choice('solver',['newton-cg', 'sag' , 'lbfgs' ]),
+       'verbose':hp.randint('verbose',20)
        }
 algo=partial(tpe.suggest)
-best=fmin(percept,space,algo=algo,max_evals=100)
-print(best)
-print(percept(best))
+trials = Trials()
+best=fmin(percept,space,algo=algo,max_evals=100,trials=trials)
+# print(best)
+print(space_eval(space, best))
+print(percept(space_eval(space, best)))
 print("test")
 
