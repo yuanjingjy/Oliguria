@@ -12,6 +12,7 @@ from sklearn.model_selection import StratifiedKFold
 import OliguriaFunction as OF
 from sklearn.linear_model import LogisticRegression
 from imblearn.over_sampling import RandomOverSampler
+from sklearn.neural_network import MLPClassifier#import the classifier
 
 
 ###################################################
@@ -49,12 +50,12 @@ prenum_test = []
 
 dataMat=np.array(dataMat)
 labelMat = np.array(labelMat)
-
+n_samples,n_features=np.shape(dataMat)
 
 def percept(args):
     global dataMat,labelMat
     accuracy=[]
-    skf = StratifiedKFold(n_splits=10)
+    skf = StratifiedKFold(n_splits=2)
     for train, test in skf.split(dataMat, labelMat):
         # print("%s %s" % (train, test))
         train_in = dataMat[train]
@@ -63,12 +64,22 @@ def percept(args):
         test_out = labelMat[test]
         train_in, train_out = RandomOverSampler().fit_sample(train_in, train_out)
 
-        clf = LogisticRegression(penalty='l2', C=args["C"],
-                                intercept_scaling=args["intercept_scaling"],
-                                 class_weight='blanced',
-                                 solver=args['solver'], max_iter=1000,
-                                  verbose=args["verbose"],
-                                 warm_start=True)
+        # clf = LogisticRegression(penalty='l2', C=args["C"],
+        #                         intercept_scaling=args["intercept_scaling"],
+        #                          class_weight='blanced',
+        #                          solver=args['solver'], max_iter=1000,
+        #                           verbose=args["verbose"],
+        #                          warm_start=True)
+        clf = MLPClassifier(hidden_layer_sizes=(int(args['hidden_layer_sizes']),),
+                            activation=args['activation'],
+                            shuffle=True,
+                            solver=args['solver'],
+                            alpha=1e-6,
+                            batch_size=int(args['batch_size']),
+                            early_stopping=args['early_stopping'],
+                            max_iter=3000
+                            )
+
         clf.fit(train_in,train_out)
         y_pred=clf.predict(test_in)
         acc=accuracy_score(test_out,y_pred)
@@ -78,11 +89,11 @@ def percept(args):
 
 from hyperopt import fmin, tpe, hp, STATUS_OK, Trials,partial,space_eval
 space={
-       'C':hp.uniform('C',0.01,80),
-        'intercept_scaling':hp.uniform("intercept_scaling",1,200),
-        'class_weight':hp.choice('class_weight',[None,'balanced']),
-        'solver':hp.choice('solver',['newton-cg', 'sag' , 'lbfgs' ]),
-       'verbose':hp.randint('verbose',20)
+    'hidden_layer_sizes': hp.uniform('hidden_layer_sizes', 2, n_features),
+    'activation': hp.choice('activation', ['identity', 'logistic', 'tanh', 'relu']),
+    'solver': hp.choice('solver', ['lbfgs', 'sgd', 'adam']),
+    'batch_size': hp.uniform('batch_size', 1, 100),
+    'early_stopping': hp.choice('early_stopping', [True, False]),
        }
 algo=partial(tpe.suggest)
 trials = Trials()
