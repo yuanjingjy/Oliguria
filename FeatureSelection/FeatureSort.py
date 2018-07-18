@@ -56,8 +56,8 @@ labelmat=data['classlabel']
 data.drop(['classlabel'],inplace=True ,axis=1)#去掉标签列
 
 data=data.drop(['vaso','saps','sapsii','sapsii_prob','lods',
-                      'oasis','oasis_prob','mingcs','apsiii_prob','apsiii',
-                      'gender','vent','sofa','diuretic','sirs'] ,axis=1)
+                      'oasis','oasis_prob','mingcs','apsiii_prob','apsiii'
+                      ,'vent','sofa','diuretic','sirs'] ,axis=1)
 
 datamat=data
 featurenames=datamat.keys()

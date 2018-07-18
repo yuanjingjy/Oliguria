@@ -13,7 +13,10 @@ from imblearn.under_sampling import RandomUnderSampler
 from imblearn.over_sampling import RandomOverSampler
 import OliguriaFunction as OF
 from sklearn.linear_model import LogisticRegression
-
+from sklearn.neural_network import MLPClassifier  # import the classifier
+from sklearn import  svm
+from sklearn.ensemble import  AdaBoostClassifier
+from sklearn.ensemble import BaggingClassifier
 import pandas as  pd  # python data analysis
 import matplotlib.pyplot as plt
 
@@ -64,11 +67,29 @@ for train, test in skf.split(dataMat, labelMat):
     test_out = labelMat[test]
     train_in, train_out = RandomOverSampler().fit_sample(train_in, train_out)
     # train_in, train_out = RandomUnderSampler().fit_sample(train_in, train_out)
-
-    clf=LogisticRegression(penalty='l1', dual=False, tol=0.0001, C=63,
+    #
+    lr=LogisticRegression(penalty='l1', dual=False, tol=0.0001, C=63,
                            fit_intercept=True, intercept_scaling=24, class_weight=None,
                            random_state=None, solver='liblinear', max_iter=1000,
-                           multi_class='ovr', verbose=14, warm_start=False, n_jobs=1)
+                           multi_class='ovr', verbose=14, warm_start=False)
+    # clf = MLPClassifier(hidden_layer_sizes=(31,),
+    #                     activation='relu',
+    #                     shuffle=True,
+    #                     solver='adam',
+    #                     alpha=1e-6,
+    #                     batch_size=71,
+    #                     early_stopping=False,
+    #                     max_iter=1000
+    #                     )
+    # clf = svm.SVC(C=43, kernel='rbf', gamma='auto',
+    #               shrinking=True, probability=True, tol=0.0001,
+    #               cache_size=1000, max_iter=-1, class_weight='balanced',
+    #               decision_function_shape='ovr', random_state=None
+    #               )
+    clf=AdaBoostClassifier(base_estimator=svm.SVC(probability=True), n_estimators=200,learning_rate=1,
+                           algorithm='SAMME',  random_state=200)
+    # clf=BaggingClassifier(n_estimators=200,max_samples=1.0,max_features=1.0,
+    #                       bootstrap=True,bootstrap_features=False,random_state=200)
     clf.fit(train_in,train_out)
     test_predict=clf.predict(test_in)
     proba_test=clf.predict_proba(test_in)
