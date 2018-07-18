@@ -19,22 +19,23 @@ from sklearn.ensemble import  AdaBoostClassifier
 from sklearn.ensemble import BaggingClassifier
 import pandas as  pd  # python data analysis
 import matplotlib.pyplot as plt
+import  xgboost as xg
 
-data = pd.read_csv('outlier.csv')
-labelMat = data['classlabel']
-dataMat = data.iloc[:, 0:60]
-# dataMat=dataMat.drop(['vaso','saps','sapsii','sapsii_prob','lods',
-#                       'oasis','oasis_prob','mingcs','apsiii_prob','apsiii',
-#                       'gender','vent','sofa'] ,axis=1)
-
+data = pd.read_csv('final_eigen.csv')
+labelMat = data['Label']
+# dataMat = data.iloc[:, 0:60]
+dataMat=data.drop(['vaso','saps','sapsii','sapsii_prob','lods',
+                      'oasis','oasis_prob','mingcs','apsiii_prob','apsiii',
+                      'vent','sofa','hospmor','Label','icu_length_of_stay',] ,axis=1)
+# dataMat=dataMat.drop(['gender'] ,axis=1)
 # 去除假设检验不通过的
-delnames = ['pco2_avg', 'ph_avg', 'wbc_min', 'wbc_avg', 'wbc_max',
-            'rbc_max', 'rbc_avg', 'rbc_min', 'ph_avg', 'platelet_avg', 'platelet_max',
-            'creatinine_min', 'creatinine_avg', 'bun_min', 'bun_max',
-            'bun_avg', 'pt_min', 'pt_avg', 'inr_min', 'heartrate_min', 'diasbp_max',
-            'meanbp_mean', 'resprate_mean', 'resprate_min', 'spo2_mean',
-            'spo2_max', 'spo2_min', 'BMI']
-dataMat = dataMat.drop(delnames, axis=1)
+# delnames = ['pco2_avg', 'ph_avg', 'wbc_min', 'wbc_avg', 'wbc_max',
+#             'rbc_max', 'rbc_avg', 'rbc_min', 'ph_avg', 'platelet_avg', 'platelet_max',
+#             'creatinine_min', 'creatinine_avg', 'bun_min', 'bun_max',
+#             'bun_avg', 'pt_min', 'pt_avg', 'inr_min', 'heartrate_min', 'diasbp_max',
+#             'meanbp_mean', 'resprate_mean', 'resprate_min', 'spo2_mean',
+#             'spo2_max', 'spo2_min', 'BMI']
+# dataMat = dataMat.drop(delnames, axis=1)
 featurenames=dataMat.keys()
 
 evaluate_train = []
@@ -54,7 +55,7 @@ prenum_test = []
 dataMat=np.array(dataMat)
 labelMat = np.array(labelMat)
 
-skf = StratifiedKFold(n_splits=10)
+skf = StratifiedKFold(n_splits=5)
 for train, test in skf.split(dataMat, labelMat):
     # ==============================================================================
     # skf=StratifiedShuffleSplit(n_splits=10)
@@ -68,26 +69,27 @@ for train, test in skf.split(dataMat, labelMat):
     train_in, train_out = RandomOverSampler().fit_sample(train_in, train_out)
     # train_in, train_out = RandomUnderSampler().fit_sample(train_in, train_out)
     #
-    lr=LogisticRegression(penalty='l1', dual=False, tol=0.0001, C=63,
-                           fit_intercept=True, intercept_scaling=24, class_weight=None,
-                           random_state=None, solver='liblinear', max_iter=1000,
+    clf = LogisticRegression(penalty='l1', dual=False, tol=0.0001, C=63,
+                           fit_intercept=True, intercept_scaling=24, class_weight='balanced',
+                           random_state=None, solver='liblinear', max_iter=10000,
                            multi_class='ovr', verbose=14, warm_start=False)
-    # clf = MLPClassifier(hidden_layer_sizes=(31,),
+    # clf = MLPClassifier(hidden_layer_sizes=(60,),
     #                     activation='relu',
     #                     shuffle=True,
     #                     solver='adam',
     #                     alpha=1e-6,
-    #                     batch_size=71,
+    #                     batch_size=5,
     #                     early_stopping=False,
     #                     max_iter=1000
     #                     )
+    # clf=xg.XGBClassifier()
     # clf = svm.SVC(C=43, kernel='rbf', gamma='auto',
     #               shrinking=True, probability=True, tol=0.0001,
     #               cache_size=1000, max_iter=-1, class_weight='balanced',
     #               decision_function_shape='ovr', random_state=None
     #               )
-    clf=AdaBoostClassifier(base_estimator=svm.SVC(probability=True), n_estimators=200,learning_rate=1,
-                           algorithm='SAMME',  random_state=200)
+    # clf=AdaBoostClassifier(base_estimator=svm.SVC(probability=True), n_estimators=200,learning_rate=1,
+    #                        algorithm='SAMME',  random_state=200)
     # clf=BaggingClassifier(n_estimators=200,max_samples=1.0,max_features=1.0,
     #                       bootstrap=True,bootstrap_features=False,random_state=200)
     clf.fit(train_in,train_out)
