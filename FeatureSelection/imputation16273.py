@@ -48,14 +48,11 @@ data.drop(['classlabel'],inplace=True ,axis=1)#去掉标签列
 data=data.drop(['vaso','saps','sapsii','sapsii_prob','lods',
                       'oasis','oasis_prob','mingcs','apsiii_prob','apsiii'
                       ,'vent','sofa','diuretic','sirs'] ,axis=1)
-nullpercent=data.count()/16273
-nullpercent = pd.DataFrame(nullpercent)
-feature40=nullpercent  >= 0.4
-feature40names[feature40.keys()
-data777=data[feature40names]
-
-datamat=data
-featurenames=datamat.keys()
+nullpercent=data.count()/16273#统计每个特征值的缺失比例
+feature40names = nullpercent[nullpercent >= 0.4].index#提取缺失比例小于40%的特征值名称
+data = data[feature40names]#提取缺失比例小于40%的特征值数据
+data.fillna(data.mean(), inplace=True)#缺失数据用平均值代替
+featurenames=data.keys()
 num_features=np.shape(data)[1]
 
 #-----------------------------------------------------------------#
@@ -73,5 +70,5 @@ statistic, ptest = statest.normaltest(data,axis=0)#检验每一个特征是否�
 data=OF.zscore_re(data)
 data.fillna(data.mean(),inplace=True)
 data['classlabel']=labelmat
-data.to_csv('异常处理后.csv')
+data.to_csv('outlier16273.csv')
 datamat=OF.normalizedata(data)
