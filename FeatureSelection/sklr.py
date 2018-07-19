@@ -21,12 +21,13 @@ import pandas as  pd  # python data analysis
 import matplotlib.pyplot as plt
 import  xgboost as xg
 
-data = pd.read_csv('final_eigen.csv')
-labelMat = data['Label']
+data = pd.read_csv('outlier16273.csv')
+labelMat = data['classlabel']
 # dataMat = data.iloc[:, 0:60]
-dataMat=data.drop(['vaso','saps','sapsii','sapsii_prob','lods',
-                      'oasis','oasis_prob','mingcs','apsiii_prob','apsiii',
-                      'vent','sofa','hospmor','Label','icu_length_of_stay',] ,axis=1)
+dataMat=data.drop('classlabel',axis=1)
+# dataMat=data.drop(['vaso','saps','sapsii','sapsii_prob','lods',
+#                       'oasis','oasis_prob','mingcs','apsiii_prob','apsiii',
+#                       'vent','sofa','hospmor','classlabel','icu_length_of_stay',] ,axis=1)
 # dataMat=dataMat.drop(['gender'] ,axis=1)
 # 去除假设检验不通过的
 # delnames = ['pco2_avg', 'ph_avg', 'wbc_min', 'wbc_avg', 'wbc_max',
@@ -66,22 +67,22 @@ for train, test in skf.split(dataMat, labelMat):
     test_in = dataMat[test]
     train_out = labelMat[train]
     test_out = labelMat[test]
-    train_in, train_out = RandomOverSampler().fit_sample(train_in, train_out)
-    # train_in, train_out = RandomUnderSampler().fit_sample(train_in, train_out)
+    # train_in, train_out = RandomOverSampler().fit_sample(train_in, train_out)
+    train_in, train_out = RandomUnderSampler().fit_sample(train_in, train_out)
     #
-    clf = LogisticRegression(penalty='l1', dual=False, tol=0.0001, C=63,
-                           fit_intercept=True, intercept_scaling=24, class_weight='balanced',
-                           random_state=None, solver='liblinear', max_iter=10000,
-                           multi_class='ovr', verbose=14, warm_start=False)
-    # clf = MLPClassifier(hidden_layer_sizes=(60,),
-    #                     activation='relu',
-    #                     shuffle=True,
-    #                     solver='adam',
-    #                     alpha=1e-6,
-    #                     batch_size=5,
-    #                     early_stopping=False,
-    #                     max_iter=1000
-    #                     )
+    # clf = LogisticRegression(penalty='l2', dual=False, tol=0.0001, C=0.3,
+    #                        fit_intercept=True, intercept_scaling=100, class_weight='balanced',
+    #                        random_state=None, solver='liblinear', max_iter=10000,
+    #                        multi_class='ovr', verbose=0, warm_start=False)
+    clf = MLPClassifier(hidden_layer_sizes=(25,),
+                        activation='relu',
+                        shuffle=True,
+                        solver='sgd',
+                        alpha=1e-6,
+                        batch_size=6,
+                        early_stopping=False,
+                        max_iter=1000
+                        )
     # clf=xg.XGBClassifier()
     # clf = svm.SVC(C=43, kernel='rbf', gamma='auto',
     #               shrinking=True, probability=True, tol=0.0001,

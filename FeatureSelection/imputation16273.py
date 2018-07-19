@@ -52,9 +52,10 @@ data=data.drop(['vaso','saps','sapsii','sapsii_prob','lods',
 nullpercent=data.count()/16273#统计每个特征值的缺失比例
 feature40names = nullpercent[nullpercent >= 0.6].index#提取缺失比例小于40%的特征值名称
 data = data[feature40names]#提取缺失比例小于40%的特征值数据
-imp=Imputer(missing_values='nan',strategy='most_frequent')
+featurenames = data.keys()
+imp=Imputer(strategy='mean')
 data=imp.fit_transform(data)
-featurenames=data.keys()
+
 num_features=np.shape(data)[1]
 
 #-----------------------------------------------------------------#
@@ -71,6 +72,7 @@ statistic, ptest = statest.normaltest(data,axis=0)#检验每一个特征是否�
 #-----------------------------------------------------------------#
 data=OF.zscore_re(data)
 data=imp.fit_transform(data)
+data=pd.DataFrame(data,columns=featurenames)
 data['classlabel']=labelmat
 data.to_csv('outlier16273.csv')
 datamat=OF.normalizedata(data)
