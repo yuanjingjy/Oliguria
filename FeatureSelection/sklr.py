@@ -21,7 +21,7 @@ import pandas as  pd  # python data analysis
 import matplotlib.pyplot as plt
 import  xgboost as xg
 
-data = pd.read_csv('outlier16273.csv')
+data = pd.read_csv('outlier25789.csv')
 labelMat = data['classlabel']
 # dataMat = data.iloc[:, 0:60]
 dataMat=data.drop('classlabel',axis=1)
@@ -55,7 +55,8 @@ prenum_test = []
 
 dataMat=np.array(dataMat)
 labelMat = np.array(labelMat)
-
+# dataMat, labelMat = RandomOverSampler().fit_sample(dataMat, labelMat)
+# dataMat, labelMat = RandomUnderSampler().fit_sample(dataMat,labelMat)
 skf = StratifiedKFold(n_splits=5)
 for train, test in skf.split(dataMat, labelMat):
     # ==============================================================================
@@ -68,7 +69,7 @@ for train, test in skf.split(dataMat, labelMat):
     train_out = labelMat[train]
     test_out = labelMat[test]
     # train_in, train_out = RandomOverSampler().fit_sample(train_in, train_out)
-    train_in, train_out = RandomUnderSampler().fit_sample(train_in, train_out)
+    # train_in, train_out = RandomUnderSampler().fit_sample(train_in, train_out)
     #
     # clf = LogisticRegression(penalty='l2', dual=False, tol=0.0001, C=0.3,
     #                        fit_intercept=True, intercept_scaling=100, class_weight='balanced',

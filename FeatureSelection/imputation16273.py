@@ -18,7 +18,7 @@ from sklearn.preprocessing import Imputer
 
 
 #加载数据
-data=pd.read_csv('final16273.csv')
+data=pd.read_csv('final25789.csv')
 
 #数据预处理，去掉建模无关项
 data.drop(['subject_id','hadm_id','intime','icustay_id'],inplace=True,axis=1)#去掉建模无关的列
@@ -48,8 +48,8 @@ data.drop(['classlabel'],inplace=True ,axis=1)#去掉标签列
 
 data=data.drop(['vaso','saps','sapsii','sapsii_prob','lods',
                       'oasis','oasis_prob','mingcs','apsiii_prob','apsiii'
-                      ,'vent','sofa','diuretic','sirs'] ,axis=1)
-nullpercent=data.count()/16273#统计每个特征值的缺失比例
+                      ,'vent','sofa','sirs'] ,axis=1)
+nullpercent=data.count()/25789#统计每个特征值的缺失比例
 feature40names = nullpercent[nullpercent >= 0.6].index#提取缺失比例小于40%的特征值名称
 data = data[feature40names]#提取缺失比例小于40%的特征值数据
 featurenames = data.keys()
@@ -74,6 +74,6 @@ data=OF.zscore_re(data)
 data=imp.fit_transform(data)
 data=pd.DataFrame(data,columns=featurenames)
 data['classlabel']=labelmat
-data.to_csv('outlier16273.csv')
+data.to_csv('outlier25789.csv')
 datamat=OF.normalizedata(data)
 print()
