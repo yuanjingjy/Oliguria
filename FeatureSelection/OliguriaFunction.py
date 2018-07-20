@@ -148,3 +148,24 @@ def zscore_re(datain):
 
     dataout[maskinfo]=np.nan#异常值位置置空
     return dataout
+
+
+def evaluatemodel(y_true, y_predict):
+    from sklearn.metrics import confusion_matrix
+    #    from sklearn.metrics import accuracy_score
+    from sklearn.metrics import roc_auc_score
+    #    from sklearn.metrics import precision_score
+    #    from sklearn.metrics import recall_score
+    tn, fp, fn, tp = confusion_matrix(y_true, y_predict).ravel();
+    TPR = tp / (tp + fn);
+    SPC = tn / (fp + tn);
+    PPV = tp / (tp + fp);
+    NPV = tn / (tn + fn);
+    ACC = (tp + tn) / (tn + fp + fn + tp);
+
+    #    Accuracy=accuracy_score(y_true,y_predict)
+    # AUC = roc_auc_score(y_true, proba)
+    #    Precision=precision_score(y_true,y_predict)
+    #    Recall=recall_score(y_true,y_predict)
+    BER = 0.5 * ((1 - TPR) + (1 - SPC))
+    return [[TPR, SPC, PPV, NPV, ACC,  BER]], [[tn, fp, fn, tp]]
