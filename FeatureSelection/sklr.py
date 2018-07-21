@@ -71,9 +71,9 @@ for train, test in skf.split(dataMat, labelMat):
     train_out = labelMat[train]
     test_out = labelMat[test]
 
-    clf = LogisticRegression(penalty='l1', dual=False, tol=0.00001, C=0.5,
+    clf = LogisticRegression(penalty='l2', dual=False, tol=0.00001, C=0.5,
                            fit_intercept=True, intercept_scaling=5, class_weight='balanced',
-                           random_state=None, solver='saga', max_iter=10000,
+                           random_state=None, solver='liblinear', max_iter=10000,
                            multi_class='ovr',  warm_start=True)
     # clf = MLPClassifier(hidden_layer_sizes=(60,),
     #                     activation='relu',
