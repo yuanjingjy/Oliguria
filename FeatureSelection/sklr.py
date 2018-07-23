@@ -70,13 +70,13 @@ for train, test in skf.split(dataMat, labelMat):
     test_in = dataMat[test]
     train_out = labelMat[train]
     test_out = labelMat[test]
-
-    clf = LogisticRegression(penalty='l2', dual=False, tol=0.00001, C=0.5,
-                           fit_intercept=True, intercept_scaling=5, class_weight='balanced',
-                           random_state=None, solver='liblinear', max_iter=10000,
-                           multi_class='ovr',  warm_start=True)
-    # clf = MLPClassifier(hidden_layer_sizes=(60,),
-    #                     activation='relu',
+    #
+    # clf = LogisticRegression(penalty='l2', dual=False, tol=0.0001, C=1,
+    #                        fit_intercept=True, intercept_scaling=1, class_weight='balanced',
+    #                        random_state=None, solver='lbfgs', max_iter=10000,
+    #                        multi_class='ovr',  warm_start=True)
+    # clf = MLPClassifier(hidden_layer_sizes=(60,),#9,10
+    #                     activation='tanh',
     #                     shuffle=True,
     #                     solver='sgd',
     #                     alpha=1e-6,
@@ -90,7 +90,7 @@ for train, test in skf.split(dataMat, labelMat):
     #               cache_size=1000, max_iter=-1, class_weight='balanced',
     #               decision_function_shape='ovr', random_state=None
     #               )
-    # clf=AdaBoostClassifier( n_estimators=200,algorithm='SAMME',  random_state=200)
+    clf=AdaBoostClassifier( n_estimators=200,algorithm='SAMME',  random_state=200)
     # clf=BaggingClassifier(n_estimators=200,max_samples=1.0,max_features=1.0,
     #                       bootstrap=True,bootstrap_features=False,random_state=200)
     trainset = np.c_[train_in, train_out]
@@ -120,8 +120,8 @@ for train, test in skf.split(dataMat, labelMat):
 
     sum_pre = np.sum(predict_ensemble,axis=0)
     tmp=sum_pre.copy()
-    sum_pre[tmp > 7] = 1
-    sum_pre[tmp < 8] = 0
+    sum_pre[tmp > 9] = 1
+    sum_pre[tmp < 10] = 0
     test_predict = sum_pre#测试集的预测结果
 
     sum_prob = []
@@ -131,6 +131,8 @@ for train, test in skf.split(dataMat, labelMat):
             tmp_prob = np.mean(colj[colj >= 0.5])
         else:
             tmp_prob = np.mean(colj[colj < 0.5])
+        if tmp_prob == nan:
+            print('test')
         sum_prob.append(tmp_prob)
     sum_prob = np.array(sum_prob)
     proba_test = sum_prob#测试集概率预测结果
