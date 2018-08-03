@@ -21,7 +21,7 @@ import pandas as  pd  # python data analysis
 import matplotlib.pyplot as plt
 import  xgboost as xg
 
-data = pd.read_csv('outlier25789.csv')
+data = pd.read_csv('outlier25000.csv')
 labelMat = data['classlabel']
 # dataMat = data.iloc[:, 0:60]
 dataMat=data.drop('classlabel',axis=1)
@@ -30,13 +30,15 @@ dataMat=data.drop('classlabel',axis=1)
 #                       'vent','sofa','hospmor','classlabel','icu_length_of_stay',] ,axis=1)
 # dataMat=dataMat.drop(['gender'] ,axis=1)
 # 去除假设检验不通过的
-# delnames = ['pco2_avg', 'ph_avg', 'wbc_min', 'wbc_avg', 'wbc_max',
-#             'rbc_max', 'rbc_avg', 'rbc_min', 'ph_avg', 'platelet_avg', 'platelet_max',
-#             'creatinine_min', 'creatinine_avg', 'bun_min', 'bun_max',
-#             'bun_avg', 'pt_min', 'pt_avg', 'inr_min', 'heartrate_min', 'diasbp_max',
-#             'meanbp_mean', 'resprate_mean', 'resprate_min', 'spo2_mean',
-#             'spo2_max', 'spo2_min', 'BMI']
-# dataMat = dataMat.drop(delnames, axis=1)
+delnames = [ 'wbc_min', 'wbc_avg', 'wbc_max', 'ph_avg', 'ph_min','ph_max',
+             'platelet_max','lactate_max','lactate_avg','sirs','saps',
+             'diasbp_max','sysbp_max','meanbp_max','mingcs','BMI']#25789个样本假设检验不通过的
+# delnames = [ 'po2_avg', 'pco2_max', 'ph_min', 'ph_avg', 'ph_min','rbc_max',
+#              'creatinine_min','creatinine_max','creatinine_avg','sirs','saps',
+#              'bun_max','bun_avg','pt_min','inr_min','meanbp_mean',
+#              'resprate_mean','resprate_min','spo2_max',
+#              'spo2_min','si_max','diuretic']#16273个样本假设检验不通过的
+dataMat = dataMat.drop(delnames, axis=1)
 featurenames=dataMat.keys()
 
 evaluate_train = []
@@ -55,8 +57,7 @@ prenum_test = []
 
 dataMat=np.array(dataMat)
 labelMat = np.array(labelMat)
-# dataMat, labelMat = RandomOverSampler().fit_sample(dataMat, labelMat)
-# dataMat, labelMat = RandomUnderSampler().fit_sample(dataMat,labelMat)
+num_feantures = np.shape(dataMat)[1]
 skf = StratifiedKFold(n_splits=10)
 for train, test in skf.split(dataMat, labelMat):
     # ==============================================================================
@@ -71,32 +72,33 @@ for train, test in skf.split(dataMat, labelMat):
     train_out = labelMat[train]
     test_out = labelMat[test]
     #
-    # clf = LogisticRegression(penalty='l2', dual=False, tol=0.0001, C=1,
-    #                        fit_intercept=True, intercept_scaling=1, class_weight='balanced',
-    #                        random_state=None, solver='lbfgs', max_iter=10000,
+    # clf = LogisticRegression(penalty='l1', dual=False, tol=0.0001, C=5.7,#LR 10,11
+    #                        fit_intercept=True, intercept_scaling=97, class_weight='balanced',
+    #                        random_state=None, solver='liblinear', max_iter=10000,
     #                        multi_class='ovr',  warm_start=True)
-    # clf = MLPClassifier(hidden_layer_sizes=(60,),#9,10
-    #                     activation='tanh',
-    #                     shuffle=True,
-    #                     solver='sgd',
-    #                     alpha=1e-6,
-    #                     batch_size=5,
-    #                     early_stopping=True,
-    #                     max_iter=1000
-    #                     )
+    clf = MLPClassifier(hidden_layer_sizes=(50,),#9,10
+                        activation='tanh',
+                        shuffle=True,
+                        solver='sgd',
+                        alpha=1e-6,
+                        batch_size=5,
+                        early_stopping=True,
+                        max_iter=10000
+                        # ,learning_rate='adaptive'
+                        )
     # clf=xg.XGBClassifier()
-    # clf = svm.SVC(C=43, kernel='rbf', gamma='auto',
+    # clf = svm.SVC(C=45, kernel='rbf', gamma='auto',
     #               shrinking=True, probability=True, tol=0.0001,
     #               cache_size=1000, max_iter=-1, class_weight='balanced',
     #               decision_function_shape='ovr', random_state=None
     #               )
-    clf=AdaBoostClassifier( n_estimators=200,algorithm='SAMME',  random_state=200)
+    # clf=AdaBoostClassifier( n_estimators=150,algorithm='SAMME.R',learning_rate=0.8)#8,9
     # clf=BaggingClassifier(n_estimators=200,max_samples=1.0,max_features=1.0,
     #                       bootstrap=True,bootstrap_features=False,random_state=200)
     trainset = np.c_[train_in, train_out]
     trainset=np.random.permutation(trainset)
-    train_pos = trainset[trainset[:,64] == 1]#训练集中的全部阳性样本
-    train_neg = trainset[trainset[:, 64] == 0]#训练集中的全部阴性样本
+    train_pos = trainset[trainset[:,num_feantures] == 1]#训练集中的全部阳性样本
+    train_neg = trainset[trainset[:, num_feantures] == 0]#训练集中的全部阴性样本
     num_neg = np.shape(train_neg)[0]#阴性样本个数
     num_pos = np.shape(train_pos)[0]#阳性样本个数
     n_split=int(num_neg/num_pos)#划分多少个模型
@@ -109,8 +111,8 @@ for train, test in skf.split(dataMat, labelMat):
             neg = train_neg[(i*num_pos+1):num_neg,:]
         train_i = np.r_[neg,train_pos]
         train_i = np.random.permutation(train_i)
-        clf.fit(train_i[:,0:64],train_i[:,64])
-        pre_i=clf.predict(test_in[:,0:64])
+        clf.fit(train_i[:,0:num_feantures],train_i[:,num_feantures])
+        pre_i=clf.predict(test_in[:,0:num_feantures])
         pre_pro_i=clf.predict_proba(test_in)
         predict_ensemble.append(pre_i)
         predict_prob.append(pre_pro_i[:, 1])
@@ -120,8 +122,8 @@ for train, test in skf.split(dataMat, labelMat):
 
     sum_pre = np.sum(predict_ensemble,axis=0)
     tmp=sum_pre.copy()
-    sum_pre[tmp > 9] = 1
-    sum_pre[tmp < 10] = 0
+    sum_pre[tmp >9] = 1
+    sum_pre[tmp <10] = 0
     test_predict = sum_pre#测试集的预测结果
 
     sum_prob = []
@@ -131,8 +133,8 @@ for train, test in skf.split(dataMat, labelMat):
             tmp_prob = np.mean(colj[colj >= 0.5])
         else:
             tmp_prob = np.mean(colj[colj < 0.5])
-        if tmp_prob == nan:
-            print('test')
+        # if tmp_prob == np.nan:
+        #     print('test')
         sum_prob.append(tmp_prob)
     sum_prob = np.array(sum_prob)
     proba_test = sum_prob#测试集概率预测结果
