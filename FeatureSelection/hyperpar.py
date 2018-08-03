@@ -17,7 +17,7 @@ from sklearn import svm
 
 ###################################################
 
-data = pd.read_csv('outlier25789.csv')
+data = pd.read_csv('outlier25000.csv')
 labelMat = data['classlabel']
 # dataMat = data.iloc[:, 0:60]
 dataMat=data.drop('classlabel',axis=1)
@@ -56,7 +56,7 @@ n_samples,n_features=np.shape(dataMat)
 def percept(args):
     global dataMat,labelMat
     accuracy=[]
-    skf = StratifiedKFold(n_splits=5)
+    skf = StratifiedKFold(n_splits=10)
     for train, test in skf.split(dataMat, labelMat):
         predict_ensemble = []  # 存放15个模型对测试集的预测结果
         predict_prob = []  # 存放15个模型预测出的概率值
@@ -67,20 +67,20 @@ def percept(args):
         test_out = labelMat[test]
         # train_in, train_out = RandomOverSampler().fit_sample(train_in, train_out)
 
-        clf = LogisticRegression(penalty=args["penalty"], C=args["C"],
-                                intercept_scaling=args["intercept_scaling"]+1,
-                                 class_weight='balanced',
-                                 solver=args['solver'], max_iter=1000,
-                                 warm_start=args['warm_start'])
-        # clf = MLPClassifier(hidden_layer_sizes=(int(args['hidden_layer_sizes']),),
-        #                     activation=args['activation'],
-        #                     shuffle=True,
-        #                     solver=args['solver'],
-        #                     alpha=1e-6,
-        #                     batch_size=int(args['batch_size']),
-        #                     early_stopping=args['early_stopping'],
-        #                     max_iter=1000
-        #                     )
+        # clf = LogisticRegression(penalty=args["penalty"], C=args["C"],
+        #                         intercept_scaling=args["intercept_scaling"]+1,
+        #                          class_weight='balanced',
+        #                          solver=args['solver'], max_iter=1000,
+        #                          warm_start=args['warm_start'])
+        clf = MLPClassifier(hidden_layer_sizes=(int(args['hidden_layer_sizes']),),
+                            activation=args['activation'],
+                            shuffle=True,
+                            solver=args['solver'],
+                            alpha=1e-6,
+                            batch_size=int(args['batch_size']),
+                            early_stopping=args['early_stopping'],
+                            max_iter=1000
+                            )
         # clf = svm.SVC(C=args['C'],kernel=args['kernel'], gamma='auto',
         #               shrinking=True,  probability=True,  tol=0.0001,
         #               cache_size=1000,  max_iter=-1, class_weight='balanced',
@@ -88,8 +88,8 @@ def percept(args):
         #              )
         trainset = np.c_[train_in, train_out]
         trainset = np.random.permutation(trainset)
-        train_pos = trainset[trainset[:, 64] == 1]  # 训练集中的全部阳性样本
-        train_neg = trainset[trainset[:, 64] == 0]  # 训练集中的全部阴性样本
+        train_pos = trainset[trainset[:, n_features] == 1]  # 训练集中的全部阳性样本
+        train_neg = trainset[trainset[:, n_features] == 0]  # 训练集中的全部阴性样本
         num_neg = np.shape(train_neg)[0]  # 阴性样本个数
         num_pos = np.shape(train_pos)[0]  # 阳性样本个数
         n_split = int(num_neg / num_pos)  # 划分多少个模型
@@ -102,8 +102,8 @@ def percept(args):
                 neg = train_neg[(i * num_pos + 1):num_neg, :]
             train_i = np.r_[neg, train_pos]
             train_i = np.random.permutation(train_i)
-            clf.fit(train_i[:, 0:64], train_i[:, 64])
-            pre_i = clf.predict(test_in[:, 0:64])
+            clf.fit(train_i[:, 0:n_features], train_i[:, n_features])
+            pre_i = clf.predict(test_in[:, 0:n_features])
             pre_pro_i = clf.predict_proba(test_in)
             predict_ensemble.append(pre_i)
             predict_prob.append(pre_pro_i[:, 1])
@@ -120,18 +120,18 @@ def percept(args):
         acc=accuracy_score(test_out, y_pred)
         accuracy.append(acc)
         meanacc = np.mean(accuracy)
-        if meanacc > 0.651:
+        if meanacc > 0.7:
             print(meanacc)
 
     return -meanacc
 
 
 from hyperopt import fmin, tpe, hp, STATUS_OK, Trials,partial,space_eval
-space_MLP={
-    'hidden_layer_sizes': hp.uniform('hidden_layer_sizes', 2, n_features),
+space={
+    'hidden_layer_sizes': hp.uniform('hidden_layer_sizes', 2, n_features-1),
     'activation': hp.choice('activation', ['identity', 'logistic', 'tanh', 'relu']),
     'solver': hp.choice('solver', ['lbfgs', 'sgd', 'adam']),
-    'batch_size': hp.uniform('batch_size', 1, 100),
+    'batch_size': hp.uniform('batch_size', 1, 50),
     'early_stopping': hp.choice('early_stopping', [True, False]),
        }
 space_SVM={
@@ -140,13 +140,12 @@ space_SVM={
     'degree':hp.uniform('degree',1,10),
     'coef0':hp.uniform('coef0',0,10),
 }
-space = {
+space_LR = {
     'penalty':hp.choice('penalty',['l1','l2']),
     'C':hp.uniform('C',0.1,20),
     'intercept_scaling':hp.randint('intercept_scaling',100),
     'solver':hp.choice('solver',['liblinear','saga']),
     'warm_start':hp.choice('warm_start',[True,False]),
-    'vote':hp.uniform('vote',1,13)
 }
 algo=partial(tpe.suggest)
 trials = Trials()
