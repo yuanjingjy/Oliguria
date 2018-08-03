@@ -130,7 +130,7 @@ def zscore_re(datain):
     #利用改进zscore方法识别异常数据
     diff=datain-np.median(datain,axis=0)
     MAD=np.median(abs(diff),axis=0)
-    zscore=(0.6745*diff)/MAD
+    zscore=(0.6745*diff)/(MAD+0.0001)
     zscore=abs(zscore)
     dataout=datain.copy()
     mask_zscore=zscore>3.5
