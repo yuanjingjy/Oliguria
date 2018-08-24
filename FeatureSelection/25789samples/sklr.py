@@ -36,13 +36,8 @@ dataMat=data.drop('classlabel',axis=1)
 
 # 去除假设检验不通过的
 delnames = [ 'wbc_min', 'wbc_avg', 'wbc_max', 'ph_avg', 'ph_min','ph_max',
-             'platelet_max','lactate_max','lactate_avg','sirs','saps',
+             'platelet_max','lactate_max','lactate_avg',
              'diasbp_max','sysbp_max','meanbp_max','mingcs','BMI']#25789个样本假设检验不通过的
-# delnames = [ 'po2_avg', 'pco2_max', 'ph_min', 'ph_avg', 'ph_min','rbc_max',
-#              'creatinine_min','creatinine_max','creatinine_avg','sirs','saps',
-#              'bun_max','bun_avg','pt_min','inr_min','meanbp_mean',
-#              'resprate_mean','resprate_min','spo2_max',
-#              'spo2_min','si_max','diuretic']#16273个样本假设检验不通过的
 dataMat = dataMat.drop(delnames, axis=1)
 featurenames=dataMat.keys()
 

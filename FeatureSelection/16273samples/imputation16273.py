@@ -30,12 +30,13 @@ from sklearn.preprocessing import Imputer
 
 
 #加载数据
-data=pd.read_csv('final16273.csv')
+data=pd.read_csv('./data/final16273.csv')
 
 #数据预处理，去掉建模无关项
 data.drop(['subject_id','hadm_id','intime','icustay_id'],inplace=True,axis=1)#去掉建模无关的列
 data.drop(['hospmor'],inplace=True ,axis=1)#出院死亡率为结局变量，不能用来训练模型
 data.drop(['icu_length_of_stay'],inplace=True ,axis=1)#去除ICU住院时长，结局变量，不能用来训练模型
+data.drop(['si_max', 'si_mean', 'si_min', 'sirs','saps','diuretic'],inplace=True,axis=1)#去掉不合理的特征值si，利尿剂、以及两个不相关的评分
 
 #将身高体重合成BMI，然后去掉身高、体重列
 BMI=10000*data.weight/(data.height*data.height)
@@ -81,6 +82,6 @@ data=OF.zscore_re(data)#去异常值
 data=imp.fit_transform(data)#异常值用平均值插补
 data=pd.DataFrame(data,columns=featurenames)
 data['classlabel']=labelmat
-data.to_csv('outlier16273.csv')#最终用于机器学习模型中的完整数据集
+data.to_csv('./data/outlier16273.csv')#最终用于机器学习模型中的完整数据集
 # datamat=OF.normalizedata(data)
 print()
