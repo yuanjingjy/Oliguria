@@ -23,19 +23,21 @@ from imblearn.over_sampling import RandomOverSampler
 from sklearn.ensemble import  AdaBoostClassifier
 import xgboost as xg
 from sklearn import svm
-import seaborn as sns
+from sklearn.ensemble import BaggingClassifier
 
 
-data = pd.read_csv('./data/outlier16273.csv')
+data = pd.read_csv('./data/outlier4456.csv')
 labelMat = data['classlabel']
 dataMat=data.drop('classlabel',axis=1)
 
 # 去除假设检验不通过的
-delnames = [ 'po2_avg', 'pco2_max', 'ph_min','rbc_max',
-             'creatinine_min','creatinine_max','creatinine_avg',
-             'bun_max','bun_avg','pt_min','inr_min','meanbp_mean',
+delnames = [ 'pco2_avg', 'ph_avg','wbc_min','wbc_max','wbc_avg',
+             'rbc_min','rbc_max','rbc_avg','platelet_max','platelet_avg',
+             'creatinine_min','creatinine_avg','bun_min',
+             'bun_max','bun_avg','pt_min','pt_avg','inr_min',
+             'heartrate_min','diasbp_max','meanbp_mean',
              'resprate_mean','resprate_min','spo2_max',
-             'spo2_min']#16273个样本假设检验不通过的
+             'spo2_min','spo2_mean','BMI']#16273个样本假设检验不通过的
 dataMat = dataMat.drop(delnames, axis=1)
 featurenames=dataMat.keys()
 
@@ -44,15 +46,36 @@ evaluate_test = []
 prenum_train = []
 prenum_test = []
 
-dataMat = OF.normalizedata(dataMat)
+
 
 evaluate_train = []
 evaluate_test = []
 prenum_train = []
 prenum_test = []
 
+
+
+
+"""
+PCA 降维
+"""
+# from sklearn.decomposition import PCA
+# pca = PCA(n_components=6,whiten=True)
+# pca.fit(dataMat)
+# print(pca.explained_variance_ratio_)
+# print(pca.explained_variance_)
+# dataMat = pca.transform(dataMat)
+
+tmp = pd.read_csv('data/FSsort.csv',index_col= 0)
+Featurenames = tmp.index
+dataMat = dataMat[Featurenames]
+
+dataMat = dataMat.iloc[:,0:25]
+dataMat = OF.normalizedata(dataMat)
 dataMat=np.array(dataMat)
 labelMat = np.array(labelMat)
+
+
 num_feantures = np.shape(dataMat)[1]
 skf = StratifiedKFold(n_splits=10)
 for train, test in skf.split(dataMat, labelMat):
@@ -71,16 +94,17 @@ for train, test in skf.split(dataMat, labelMat):
     #                        fit_intercept=True, intercept_scaling=97, class_weight='balanced',
     #                        random_state=None, solver='liblinear', max_iter=10000,
     #                        multi_class='ovr',  warm_start=True)
-    clf = MLPClassifier(hidden_layer_sizes=(45,),
-                        activation='relu',
-                        shuffle=True,
-                        solver='sgd',
-                        alpha=1e-6,
-                        batch_size=5,
-                        early_stopping=True,
-                        max_iter=10000
-                        # ,learning_rate='adaptive'
-                        )
+    clf = MLPClassifier()
+    # clf = MLPClassifier(hidden_layer_sizes=(6,),
+    #                     activation='tanh',
+    #                     shuffle=True,
+    #                     solver='sgd',
+    #                     alpha=1e-6,
+    #                     batch_size=20,
+    #                     early_stopping=True,
+    #                     max_iter=10000
+    #                     # ,learning_rate='adaptive'
+    #                     )
     # clf=xg.XGBClassifier()
     # clf = svm.SVC(C=0.1, kernel='rbf', gamma='auto',
     #               shrinking=True, probability=True, tol=0.0001,
