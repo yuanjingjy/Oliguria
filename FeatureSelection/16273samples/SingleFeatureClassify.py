@@ -72,7 +72,8 @@ Inputs：
 def evaluatemodel(y_true, y_predict,Mews):
     from sklearn.metrics import confusion_matrix
     from sklearn.metrics import roc_auc_score
-    tn, fp, fn, tp = confusion_matrix(y_true, y_predict).ravel();
+    tn, fp, fn, tp = confusion_matrix(y_true, y_predict).ravel()
+
     TPR = tp / (tp + fn);
     SPC = tn / (fp + tn);
     PPV = tp / (tp + fp);
